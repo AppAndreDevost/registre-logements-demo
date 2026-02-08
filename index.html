@@ -36,6 +36,18 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
 }).addTo(map);
 
+    // Polygone manuel du bâtiment du 725 Rue Jolliet
+L.polygon([
+    [48.418792949893316, -71.06901705265047],  // Coin A
+    [48.41896286001169, -71.06880381703377],   // Coin B
+    [48.418896151090294, -71.06867775321008],  // Coin C
+    [48.418723571031244, -71.06888562440874]   // Coin D
+], {
+    color: "red",
+    weight: 3,
+    fillOpacity: 0.3
+}).addTo(map);
+
 // -------------------------
 // Afficher les coordonnées au clic
 // -------------------------
@@ -128,3 +140,4 @@ tracerBatiment(48.418827691419466, -71.06886684894563);
 
 </body>
 </html>
+
