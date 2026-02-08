@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Carte des logements</title>
+    <title>Test Carte</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
 
@@ -30,7 +30,7 @@
 // -------------------------
 // Initialisation de la carte
 // -------------------------
-let map = L.map('map').setView([48.43, -71.06], 13);
+let map = L.map('map').setView([48.43, -71.06], 15);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20
@@ -43,45 +43,6 @@ map.on("click", function(e) {
     console.log("Coordonnées cliquées :", e.latlng);
     alert("Coordonnées : " + e.latlng.lat + ", " + e.latlng.lng);
 });
-
-// -------------------------
-// Fonction pour tracer un bâtiment via Overpass
-// -------------------------
-function tracerBatiment(lat, lon) {
-    const query = `
-        [out:json][timeout:10];
-        way["building"](around:80,${lat},${lon});
-        out geom;
-    `;
-
-    fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query
-    })
-    .then(r => r.json())
-    .then(data => {
-        if (!data.elements || data.elements.length === 0) {
-            console.log("Aucun bâtiment trouvé autour de ce point.");
-            return;
-        }
-
-        const bat = data.elements[0];
-        const coords = bat.geometry.map(p => [p.lat, p.lon]);
-
-        const poly = L.polygon(coords, {
-            color: "red",
-            weight: 3,
-            fillOpacity: 0.3
-        }).addTo(map);
-
-        map.fitBounds(poly.getBounds());
-    });
-}
-
-// -------------------------
-// Exemple : tracer le bâtiment (à remplacer par les bonnes coordonnées)
-// -------------------------
-tracerBatiment(48.42812, -71.06891);
 
 </script>
 <!-- 🔵 TON CODE JS FINIT ICI -->
