@@ -45,7 +45,7 @@
 
 <script>
 
-let logementsData = [];
+let logementsData = [];   <!-- ICI, dans le script -->
 
 async function verifierAdresse() {
     const adresse = document.getElementById("adresseInput").value;
@@ -72,11 +72,9 @@ async function verifierAdresse() {
             return;
         }
 
-        // Adresse valide
         resultat.textContent = `Adresse valide ✓ (lat: ${data.latt}, long: ${data.longt})`;
         resultat.style.color = "green";
 
-        // Maintenant on cherche dans les logements
         chercherLogementParAdresse(adresse);
 
     } catch (e) {
@@ -90,7 +88,7 @@ async function chargerLogements() {
     const response = await fetch(url);
     const data = await response.json();
 
-    logementsData = data.logements; // <-- on garde les logements en mémoire
+    logementsData = data.logements;
 
     const liste = document.getElementById("liste");
     liste.innerHTML = "";
