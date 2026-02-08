@@ -97,7 +97,7 @@ function chercherLogementParAdresse(adresse) {
     const adresseNorm = normaliserAdresse(adresse);
 
     const logement = logementsData.find(log =>
-        normaliserAdresse(log.adresse_complete) === adresseNorm
+        normaliserAdresse(log.adresse_complete).includes(adresseNorm)
     );
 
     if (logement) {
@@ -133,5 +133,6 @@ chargerLogements();
 
 </body>
 </html>
+
 
 
