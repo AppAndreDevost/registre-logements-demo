@@ -14,8 +14,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# URL du fichier Excel sur GitHub (à modifier)
+# URL du fichier Excel sur GitHub
 GITHUB_RAW_URL = "https://raw.githubusercontent.com/AppAndreDevost/registre-logements-demo/main/logements.xlsx"
+
+@app.get("/")
+def home():
+    return {"status": "API OK"}
+
+@app.get("/ping")
+def ping():
+    return {"pong": True}
 
 @app.get("/logements")
 def get_logements():
@@ -43,20 +51,9 @@ def get_logements():
         })
 
     return {"logements": logements}
-    @app.get("/test-excel")
-    @app.get("/test-excel")
+
+@app.get("/test-excel")
 def test_excel():
     resp = requests.get(GITHUB_RAW_URL)
     df = pd.read_excel(io.BytesIO(resp.content))
     return {"colonnes": list(df.columns)}
-from fastapi import FastAPI
-
-app = FastAPI()
-
-@app.get("/")
-def home():
-    return {"status": "API OK"}
-
-@app.get("/ping")
-def ping():
-    return {"pong": True}
