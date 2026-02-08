@@ -44,6 +44,12 @@ def get_logements():
 
     return {"logements": logements}
     @app.get("/test-excel")
+    @app.get("/test-excel")
+def test_excel():
+    resp = requests.get(GITHUB_RAW_URL)
+    df = pd.read_excel(io.BytesIO(resp.content))
+    return {"colonnes": list(df.columns)}
+
 def test_excel():
     resp = requests.get(GITHUB_RAW_URL)
     df = pd.read_excel(io.BytesIO(resp.content))
