@@ -105,9 +105,17 @@ function chercherLogementParAdresse(adresse) {
 
     const adresseNorm = normaliserAdresse(adresse);
 
-    const logement = logementsData.find(log =>
-        normaliserAdresse(log.adresse_complete).includes(adresseNorm)
-    );
+    const logement = logementsData.find(log => {
+        const adresseFichier = normaliserAdresse(log.adresse_complete);
+
+        // Vérifier que l'adresse entrée contient le type de voie exact
+        const typeVoie = extraireTypeVoie(log.adresse_complete);
+        if (typeVoie && !adresse.toLowerCase().includes(typeVoie)) {
+            return false;
+        }
+
+        return adresseFichier.includes(adresseNorm);
+    });
 
     if (logement) {
         resultat.innerHTML = `<strong>Loyer disponible :</strong><br>
@@ -122,31 +130,24 @@ function chercherLogementParAdresse(adresse) {
 }
 
 /* ------------------------------
-   4. Normalisation avancée
+   4. Normalisation
 ------------------------------ */
-const typesVoies = [
-    "rue", "boulevard", "boul", "rang", "avenue", "ave", "chemin", "ch",
-    "route", "rt", "impasse", "allee", "place", "pl", "cote", "côte"
-];
-
-function enleverTypesVoies(texte) {
-    let t = texte;
-    typesVoies.forEach(type => {
-        const regex = new RegExp("\\b" + type + "\\b", "gi");
-        t = t.replace(regex, "");
-    });
-    return t.replace(/\s+/g, " ").trim();
+function normaliserAdresse(texte) {
+    return texte
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/,/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
 }
 
-function normaliserAdresse(texte) {
-    return enleverTypesVoies(
-        texte
-            .toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/,/g, "")
-            .replace(/\s+/g, " ")
-            .trim()
-    );
+/* ------------------------------
+   5. Extraire le type de voie
+------------------------------ */
+function extraireTypeVoie(adresse) {
+    const mots = adresse.toLowerCase().split(" ");
+    const types = ["rue", "boulevard", "boul", "rang", "avenue", "ave", "chemin", "ch", "route", "rt"];
+    return mots.find(m => types.includes(m));
 }
 
 chargerLogements();
