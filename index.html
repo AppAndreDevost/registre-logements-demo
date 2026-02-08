@@ -72,29 +72,39 @@
     async function verifierAdresse(adresse) {
     const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
 
-    try {
-            const response = await fetch(url);
-            const data = await response.json();
-    
-            if (data.error) {
-                return { valide: false, message: "Adresse introuvable" };
-            }
-    
-            if (data.confidence && data.confidence < 0.5) {
-                return { valide: false, message: "Adresse douteuse" };
-            }
-    
-            return {
-                valide: true,
-                latitude: data.latt,
-                longitude: data.longt,
-                normalisee: data.standard
-            };
-    
-        } catch (e) {
-            return { valide: false, message: "Erreur réseau" };
-        }
+    async function verifierAdresse() {
+    const adresse = document.getElementById("adresseInput").value;
+    const resultat = document.getElementById("resultatAdresse");
+
+    if (!adresse.trim()) {
+        resultat.textContent = "Veuillez entrer une adresse.";
+        resultat.style.color = "red";
+        return;
     }
+
+    const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
+
+    resultat.textContent = "Vérification en cours...";
+    resultat.style.color = "black";
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.error || !data.latt || !data.longt) {
+            resultat.textContent = "Adresse invalide ou introuvable.";
+            resultat.style.color = "red";
+            return;
+        }
+
+        resultat.textContent = `Adresse valide ✓ (lat: ${data.latt}, long: ${data.longt})`;
+        resultat.style.color = "green";
+
+    } catch (e) {
+        resultat.textContent = "Erreur réseau.";
+        resultat.style.color = "red";
+    }
+}
 
 chargerLogements();
 </script>
@@ -109,6 +119,7 @@ chargerLogements();
 </body>
 
 </html>
+
 
 
 
