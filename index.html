@@ -47,7 +47,7 @@
 
 let logementsData = [];   <!-- ICI, dans le script -->
 
-async function verifierAdresse() {
+function verifierAdresse() {
     const adresse = document.getElementById("adresseInput").value;
     const resultat = document.getElementById("resultatAdresse");
 
@@ -57,30 +57,10 @@ async function verifierAdresse() {
         return;
     }
 
-    const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
-
-    resultat.textContent = "Vérification en cours...";
+    resultat.textContent = "Recherche en cours...";
     resultat.style.color = "black";
 
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.error || !data.latt || !data.longt) {
-            resultat.textContent = "Adresse invalide ou introuvable.";
-            resultat.style.color = "red";
-            return;
-        }
-
-        resultat.textContent = `Adresse valide ✓ (lat: ${data.latt}, long: ${data.longt})`;
-        resultat.style.color = "green";
-
-        chercherLogementParAdresse(adresse);
-
-    } catch (e) {
-        resultat.textContent = "Erreur réseau.";
-        resultat.style.color = "red";
-    }
+    chercherLogementParAdresse(adresse);
 }
 
 async function chargerLogements() {
@@ -144,3 +124,4 @@ chargerLogements();
 
 </body>
 </html>
+
