@@ -166,18 +166,23 @@ function extraireTypeVoie(adresse) {
 
 function afficherCarte(lat, lon) {
     const mapDiv = document.getElementById("map");
+
+    // 1. Afficher la carte AVANT l'initialisation
     mapDiv.style.display = "block";
 
-    if (!map) {
-        map = L.map('map').setView([lat, lon], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-        }).addTo(map);
-    } else {
-        map.setView([lat, lon], 14);
-    }
+    // 2. Petit délai pour laisser le navigateur afficher le div
+    setTimeout(() => {
+        if (!map) {
+            map = L.map('map').setView([lat, lon], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+            }).addTo(map);
+        } else {
+            map.setView([lat, lon], 14);
+        }
 
-    L.marker([lat, lon]).addTo(map);
+        L.marker([lat, lon]).addTo(map);
+    }, 50);
 }
 
 async function geocoderVille(ville) {
@@ -205,4 +210,5 @@ chargerLogements();
 
 </body>
 </html>
+
 
