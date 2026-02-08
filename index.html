@@ -43,68 +43,97 @@
     <p id="resultatAdresse"></p>
 </div>
 
+let logementsData = [];
+
 <script>
-    async function chargerLogements() {
-        const url = "https://registre-logements-demo.onrender.com/logements";
+    
+ async function verifierAdresse() {
+    const adresse = document.getElementById("adresseInput").value;
+    const resultat = document.getElementById("resultatAdresse");
+
+    if (!adresse.trim()) {
+        resultat.textContent = "Veuillez entrer une adresse.";
+        resultat.style.color = "red";
+        return;
+    }
+
+    const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
+
+    resultat.textContent = "Vérification en cours...";
+    resultat.style.color = "black";
+
+    try {
         const response = await fetch(url);
         const data = await response.json();
 
-        const liste = document.getElementById("liste");
-        liste.innerHTML = "";
-
-        data.logements.forEach(log => {
-            const div = document.createElement("div");
-            div.className = "logement";
-
-            div.innerHTML = `
-                <div class="adresse">${log.adresse_complete}</div>
-                <div class="details">
-                    <strong>Ville :</strong> ${log.ville}<br>
-                    <strong>Type :</strong> ${log.type_logement}<br>
-                    <strong>Chambres :</strong> ${log.nombre_chambres}<br>
-                    <strong>Coût (2026) :</strong> ${log.cout_historique.split(";")[0].split(":")[1]} $<br>
-                </div>
-            `;
-
-            liste.appendChild(div);
-        });
-    }
-    
-    async function verifierAdresse() {
-        const adresse = document.getElementById("adresseInput").value;
-        const resultat = document.getElementById("resultatAdresse");
-    
-        if (!adresse.trim()) {
-            resultat.textContent = "Veuillez entrer une adresse.";
+        if (data.error || !data.latt || !data.longt) {
+            resultat.textContent = "Adresse invalide ou introuvable.";
             resultat.style.color = "red";
             return;
         }
-    
-        const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
-    
-        resultat.textContent = "Vérification en cours...";
-        resultat.style.color = "black";
-    
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-    
-            if (data.error || !data.latt || !data.longt) {
-                resultat.textContent = "Adresse invalide ou introuvable.";
-                resultat.style.color = "red";
-                return;
-            }
-    
-            resultat.textContent = `Adresse valide ✓ (lat: ${data.latt}, long: ${data.longt})`;
-            resultat.style.color = "green";
-    
-        } catch (e) {
-            resultat.textContent = "Erreur réseau.";
-            resultat.style.color = "red";
-        }
-    }
 
-chargerLogements();
+        // Adresse valide
+        resultat.textContent = `Adresse valide ✓ (lat: ${data.latt}, long: ${data.longt})`;
+        resultat.style.color = "green";
+
+        // Maintenant on cherche dans les logements
+        chercherLogementParAdresse(adresse);
+
+    } catch (e) {
+        resultat.textContent = "Erreur réseau.";
+        resultat.style.color = "red";
+    }
+} 
+
+async function chargerLogements() {
+    const url = "https://registre-logements-demo.onrender.com/logements";
+    const response = await fetch(url);
+    const data = await response.json();
+
+    logementsData = data.logements; // <-- on garde les logements en mémoire
+
+    const liste = document.getElementById("liste");
+    liste.innerHTML = "";
+
+    logementsData.forEach(log => {
+        const div = document.createElement("div");
+        div.className = "logement";
+
+        div.innerHTML = `
+            <div class="adresse">${log.adresse_complete}</div>
+            <div class="details">
+                <strong>Ville :</strong> ${log.ville}<br>
+                <strong>Type :</strong> ${log.type_logement}<br>
+                <strong>Chambres :</strong> ${log.nombre_chambres}<br>
+                <strong>Coût (2026) :</strong> ${log.cout_historique.split(";")[0].split(":")[1]} $<br>
+            </div>
+        `;
+
+        liste.appendChild(div);
+    });
+}
+    
+function chercherLogementParAdresse(adresse) {
+    const resultat = document.getElementById("resultatAdresse");
+
+    // Normalisation simple
+    const adresseNorm = adresse.trim().toLowerCase();
+
+    const logement = logementsData.find(log =>
+        log.adresse_complete.toLowerCase() === adresseNorm
+    );
+
+    if (logement) {
+        resultat.innerHTML += `<br><br><strong>Loyer disponible :</strong><br>
+        Type : ${logement.type_logement}<br>
+        Chambres : ${logement.nombre_chambres}<br>
+        Coût 2026 : ${logement.cout_historique.split(";")[0].split(":")[1]} $`;
+        resultat.style.color = "green";
+    } else {
+        resultat.innerHTML += `<br><br>Aucun loyer disponible à cette adresse.`;
+        resultat.style.color = "orange";
+    }
+}
 </script>
 
 
@@ -117,6 +146,7 @@ chargerLogements();
 </body>
 
 </html>
+
 
 
 
