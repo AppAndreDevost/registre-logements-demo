@@ -1,14 +1,16 @@
 <!DOCTYPE html>
 <html lang="fr">
-    
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    
+
 <head>
     <meta charset="UTF-8">
     <title>Registre des logements</title>
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1a237e"> 
+    <meta name="theme-color" content="#1a237e">
+
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -33,8 +35,9 @@
             margin-top: 5px;
             color: #444;
         }
-    </style>   
+    </style>
 </head>
+
 <body>
 
 <h1>Registre des logements</h1>
@@ -52,6 +55,8 @@
 <script>
 
 let logementsData = [];
+let map = null;
+let batimentsLayer = L.layerGroup();
 
 /* ------------------------------
    1. Vérifier l'adresse entrée
@@ -114,7 +119,6 @@ function chercherLogementParAdresse(adresse) {
     const logement = logementsData.find(log => {
         const adresseFichier = normaliserAdresse(log.adresse_complete);
 
-        // Vérifier que l'adresse entrée contient le type de voie exact
         const typeVoie = extraireTypeVoie(log.adresse_complete);
         if (typeVoie && !adresse.toLowerCase().includes(typeVoie)) {
             return false;
@@ -128,12 +132,11 @@ function chercherLogementParAdresse(adresse) {
         Type : ${logement.type_logement}<br>
         Chambres : ${logement.nombre_chambres}<br>
         Coût 2026 : ${logement.cout_historique.split(";")[0].split(":")[1]} $`;
-    
+
         resultat.style.color = "green";
-    
-        // Géolocalisation simple basée sur la ville
+
         geocoderAdresseComplete(logement.adresse_complete);
-    
+
     } else {
         resultat.innerHTML = `Aucun loyer disponible à cette adresse.`;
         resultat.style.color = "orange";
@@ -162,48 +165,65 @@ function extraireTypeVoie(adresse) {
     return mots.find(m => types.includes(m));
 }
 
-    let map = null;
-
+/* ------------------------------
+   6. Afficher la carte + bâtiments
+------------------------------ */
 function afficherCarte(lat, lon) {
     const mapDiv = document.getElementById("map");
     mapDiv.style.display = "block";
 
     setTimeout(() => {
         if (!map) {
-            map = L.map('map').setView([lat, lon], 17);
+            map = L.map('map').setView([lat, lon], 18);
 
-            // Fond de carte avec bâtiments visibles
             L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
                 maxZoom: 19,
             }).addTo(map);
+
+            batimentsLayer.addTo(map);
+
         } else {
-            map.setView([lat, lon], 17);
+            map.setView([lat, lon], 18);
         }
 
         map.invalidateSize();
 
-        // Marqueur
+        batimentsLayer.clearLayers();
+
         L.marker([lat, lon]).addTo(map);
 
-        // Footprints des bâtiments (Overpass API)
-        fetch(`https://overpass-api.de/api/interpreter?data=[out:json];(way["building"](around:200,${lat},${lon}););out geom;`)
-            .then(r => r.json())
-            .then(data => {
-                data.elements.forEach(b => {
-                    if (b.geometry) {
-                        const coords = b.geometry.map(p => [p.lat, p.lon]);
-                        L.polygon(coords, {
-                            color: "#444",
-                            weight: 1,
-                            fillOpacity: 0.4
-                        }).addTo(map);
-                    }
-                });
+        const query = `
+            [out:json];
+            (
+                way["building"](around:80,${lat},${lon});
+            );
+            out geom;
+        `;
+
+        fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            body: query
+        })
+        .then(r => r.json())
+        .then(data => {
+            data.elements.forEach(b => {
+                if (b.geometry) {
+                    const coords = b.geometry.map(p => [p.lat, p.lon]);
+                    L.polygon(coords, {
+                        color: "#444",
+                        weight: 1,
+                        fillOpacity: 0.4
+                    }).addTo(batimentsLayer);
+                }
             });
+        });
 
     }, 50);
 }
 
+/* ------------------------------
+   7. Géocoder l'adresse complète
+------------------------------ */
 async function geocoderAdresseComplete(adresse) {
     const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adresse + ", Québec")}`;
 
@@ -229,10 +249,3 @@ chargerLogements();
 
 </body>
 </html>
-
-
-
-
-
-
-
