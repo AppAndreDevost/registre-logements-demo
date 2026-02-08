@@ -69,42 +69,44 @@
             liste.appendChild(div);
         });
     }
+    
     async function verifierAdresse(adresse) {
-    const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
-
-    async function verifierAdresse() {
-    const adresse = document.getElementById("adresseInput").value;
-    const resultat = document.getElementById("resultatAdresse");
-
-    if (!adresse.trim()) {
-        resultat.textContent = "Veuillez entrer une adresse.";
-        resultat.style.color = "red";
-        return;
-    }
-
-    const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
-
-    resultat.textContent = "Vérification en cours...";
-    resultat.style.color = "black";
-
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.error || !data.latt || !data.longt) {
-            resultat.textContent = "Adresse invalide ou introuvable.";
-            resultat.style.color = "red";
-            return;
+            const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
+        
+            async function verifierAdresse() {
+            const adresse = document.getElementById("adresseInput").value;
+            const resultat = document.getElementById("resultatAdresse");
+        
+            if (!adresse.trim()) {
+                resultat.textContent = "Veuillez entrer une adresse.";
+                resultat.style.color = "red";
+                return;
+            }
+        
+            const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
+        
+            resultat.textContent = "Vérification en cours...";
+            resultat.style.color = "black";
+        
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+        
+                if (data.error || !data.latt || !data.longt) {
+                    resultat.textContent = "Adresse invalide ou introuvable.";
+                    resultat.style.color = "red";
+                    return;
+                }
+        
+                resultat.textContent = `Adresse valide ✓ (lat: ${data.latt}, long: ${data.longt})`;
+                resultat.style.color = "green";
+        
+            } catch (e) {
+                resultat.textContent = "Erreur réseau.";
+                resultat.style.color = "red";
+            }
         }
-
-        resultat.textContent = `Adresse valide ✓ (lat: ${data.latt}, long: ${data.longt})`;
-        resultat.style.color = "green";
-
-    } catch (e) {
-        resultat.textContent = "Erreur réseau.";
-        resultat.style.color = "red";
     }
-}
 
 chargerLogements();
 </script>
@@ -119,6 +121,7 @@ chargerLogements();
 </body>
 
 </html>
+
 
 
 
