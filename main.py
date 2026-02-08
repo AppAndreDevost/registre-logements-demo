@@ -49,8 +49,14 @@ def test_excel():
     resp = requests.get(GITHUB_RAW_URL)
     df = pd.read_excel(io.BytesIO(resp.content))
     return {"colonnes": list(df.columns)}
+from fastapi import FastAPI
 
-def test_excel():
-    resp = requests.get(GITHUB_RAW_URL)
-    df = pd.read_excel(io.BytesIO(resp.content))
-    return {"colonnes": list(df.columns)}
+app = FastAPI()
+
+@app.get("/")
+def home():
+    return {"status": "API OK"}
+
+@app.get("/ping")
+def ping():
+    return {"pong": True}
