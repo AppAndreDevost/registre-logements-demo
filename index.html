@@ -118,10 +118,13 @@ function chercherLogementParAdresse(adresse) {
     const motsRecherche = adresseNorm.split(" ").filter(m => m.length > 2);
 
     const logement = logementsData.find(log => {
-        const adresseFichier = normaliserAdresse(log.adresse_complete);
+        // On construit une adresse complète : adresse + ville
+        const adresseCompleteFichier = normaliserAdresse(
+            `${log.adresse_complete} ${log.ville}`
+        );
 
         // Tous les mots significatifs doivent être présents
-        const okMots = motsRecherche.every(m => adresseFichier.includes(m));
+        const okMots = motsRecherche.every(m => adresseCompleteFichier.includes(m));
         if (!okMots) return false;
 
         // Si l'utilisateur écrit un type de voie, il doit être cohérent
@@ -143,7 +146,7 @@ function chercherLogementParAdresse(adresse) {
 
         resultat.style.color = "green";
 
-        geocoderAdresseComplete(logement.adresse_complete);
+        geocoderAdresseComplete(logement.adresse_complete + ", " + logement.ville);
 
     } else {
         resultat.innerHTML = `Aucun loyer disponible à cette adresse.`;
@@ -257,3 +260,4 @@ chargerLogements();
 
 </body>
 </html>
+
