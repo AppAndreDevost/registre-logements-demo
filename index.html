@@ -120,8 +120,13 @@ function chercherLogementParAdresse(adresse) {
         const adresseFichier = normaliserAdresse(log.adresse_complete);
 
         const typeVoie = extraireTypeVoie(log.adresse_complete);
-        if (typeVoie && !adresse.toLowerCase().includes(typeVoie)) {
-            return false;
+        if (typeVoie) {
+            const a = adresse.toLowerCase();
+            const t = typeVoie.toLowerCase();
+            // souple : accepte le type complet OU sa première lettre
+            if (!a.includes(t) && !a.includes(t[0])) {
+                return false;
+            }
         }
 
         return adresseFichier.includes(adresseNorm);
