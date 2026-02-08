@@ -180,7 +180,7 @@ function afficherCarte(lat, lon) {
         } else {
             map.setView([lat, lon], 14);
         }
-
+        map.invalidateSize();
         L.marker([lat, lon]).addTo(map);
     }, 50);
 }
@@ -210,5 +210,6 @@ chargerLogements();
 
 </body>
 </html>
+
 
 
