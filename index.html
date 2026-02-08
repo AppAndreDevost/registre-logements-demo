@@ -132,7 +132,7 @@ function chercherLogementParAdresse(adresse) {
         resultat.style.color = "green";
     
         // Géolocalisation simple basée sur la ville
-        geocoderVille(logement.ville);
+        geocoderAdresseComplete(logement.adresse_complete);
     
     } else {
         resultat.innerHTML = `Aucun loyer disponible à cette adresse.`;
@@ -210,6 +210,7 @@ chargerLogements();
 
 </body>
 </html>
+
 
 
 
