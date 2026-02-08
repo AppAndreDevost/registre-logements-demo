@@ -56,7 +56,6 @@
 
 let logementsData = [];
 let map = null;
-let batimentsLayer = L.layerGroup();
 
 /* ------------------------------
    1. Vérifier l'adresse entrée
@@ -118,16 +117,13 @@ function chercherLogementParAdresse(adresse) {
     const motsRecherche = adresseNorm.split(" ").filter(m => m.length > 2);
 
     const logement = logementsData.find(log => {
-        // On construit une adresse complète : adresse + ville
         const adresseCompleteFichier = normaliserAdresse(
             `${log.adresse_complete} ${log.ville}`
         );
 
-        // Tous les mots significatifs doivent être présents
         const okMots = motsRecherche.every(m => adresseCompleteFichier.includes(m));
         if (!okMots) return false;
 
-        // Si l'utilisateur écrit un type de voie, il doit être cohérent
         const typeFichier = extraireTypeVoie(log.adresse_complete);
         const typeSaisi = extraireTypeVoie(adresse);
 
@@ -177,7 +173,7 @@ function extraireTypeVoie(adresse) {
 }
 
 /* ------------------------------
-   6. Afficher la carte + bâtiments
+   6. Afficher la carte (ESRI)
 ------------------------------ */
 function afficherCarte(lat, lon) {
     const mapDiv = document.getElementById("map");
@@ -187,11 +183,11 @@ function afficherCarte(lat, lon) {
         if (!map) {
             map = L.map('map').setView([lat, lon], 18);
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-            }).addTo(map);
-
-            batimentsLayer.addTo(map);
+            // Fond ESRI avec bâtiments partout
+            L.tileLayer(
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+                { maxZoom: 19 }
+            ).addTo(map);
 
         } else {
             map.setView([lat, lon], 18);
@@ -199,35 +195,7 @@ function afficherCarte(lat, lon) {
 
         map.invalidateSize();
 
-        batimentsLayer.clearLayers();
-
         L.marker([lat, lon]).addTo(map);
-
-        const query = `
-            [out:json];
-            (
-                way["building"](around:80,${lat},${lon});
-            );
-            out geom;
-        `;
-
-        fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: query
-        })
-        .then(r => r.json())
-        .then(data => {
-            data.elements.forEach(b => {
-                if (b.geometry) {
-                    const coords = b.geometry.map(p => [p.lat, p.lon]);
-                    L.polygon(coords, {
-                        color: "#444",
-                        weight: 1,
-                        fillOpacity: 0.4
-                    }).addTo(batimentsLayer);
-                }
-            });
-        });
 
     }, 50);
 }
@@ -236,7 +204,7 @@ function afficherCarte(lat, lon) {
    7. Géocoder l'adresse complète
 ------------------------------ */
 async function geocoderAdresseComplete(adresse) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adresse + ", Québec")}`;
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adresse)}`;
 
     const response = await fetch(url);
     const data = await response.json();
@@ -260,4 +228,3 @@ chargerLogements();
 
 </body>
 </html>
-
