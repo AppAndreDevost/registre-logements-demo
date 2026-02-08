@@ -166,22 +166,41 @@ function extraireTypeVoie(adresse) {
 
 function afficherCarte(lat, lon) {
     const mapDiv = document.getElementById("map");
-
-    // 1. Afficher la carte AVANT l'initialisation
     mapDiv.style.display = "block";
 
-    // 2. Petit délai pour laisser le navigateur afficher le div
     setTimeout(() => {
         if (!map) {
-            map = L.map('map').setView([lat, lon], 14);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            map = L.map('map').setView([lat, lon], 17);
+
+            // Fond de carte avec bâtiments visibles
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
                 maxZoom: 19,
             }).addTo(map);
         } else {
-            map.setView([lat, lon], 14);
+            map.setView([lat, lon], 17);
         }
+
         map.invalidateSize();
+
+        // Marqueur
         L.marker([lat, lon]).addTo(map);
+
+        // Footprints des bâtiments (Overpass API)
+        fetch(`https://overpass-api.de/api/interpreter?data=[out:json];(way["building"](around:200,${lat},${lon}););out geom;`)
+            .then(r => r.json())
+            .then(data => {
+                data.elements.forEach(b => {
+                    if (b.geometry) {
+                        const coords = b.geometry.map(p => [p.lat, p.lon]);
+                        L.polygon(coords, {
+                            color: "#444",
+                            weight: 1,
+                            fillOpacity: 0.4
+                        }).addTo(map);
+                    }
+                });
+            });
+
     }, 50);
 }
 
@@ -210,6 +229,7 @@ chargerLogements();
 
 </body>
 </html>
+
 
 
 
