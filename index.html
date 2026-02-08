@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Registre des logements</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        .logement {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .adresse {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        .details {
+            margin-top: 5px;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Registre des logements</h1>
+<div id="liste"></div>
+
+<script>
+    async function chargerLogements() {
+        const url = "https://registre-logements-demo.onrender.com/logements";
+        const response = await fetch(url);
+        const data = await response.json();
+
+        const liste = document.getElementById("liste");
+        liste.innerHTML = "";
+
+        data.logements.forEach(log => {
+            const div = document.createElement("div");
+            div.className = "logement";
+
+            div.innerHTML = `
+                <div class="adresse">${log.adresse_complete}</div>
+                <div class="details">
+                    <strong>Ville :</strong> ${log.ville}<br>
+                    <strong>Type :</strong> ${log.type_logement}<br>
+                    <strong>Chambres :</strong> ${log.nombre_chambres}<br>
+                    <strong>Coût (2026) :</strong> ${log.cout_historique.split(";")[0].split(":")[1]} $<br>
+                </div>
+            `;
+
+            liste.appendChild(div);
+        });
+    }
+
+chargerLogements();
+</script>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a237e">
+
+<script>
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js");
+  }
+</script>
+
+</body>
+</html>
