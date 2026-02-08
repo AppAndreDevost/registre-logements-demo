@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Registre des logements</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a237e"> 
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,7 +29,7 @@
             margin-top: 5px;
             color: #444;
         }
-    </style>
+    </style>   
 </head>
 <body>
 
@@ -63,8 +65,7 @@
 
 chargerLogements();
 </script>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a237e">
+
 
 <script>
   if ("serviceWorker" in navigator) {
@@ -73,4 +74,5 @@ chargerLogements();
 </script>
 
 </body>
+
 </html>
