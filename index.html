@@ -43,11 +43,11 @@
     <p id="resultatAdresse"></p>
 </div>
 
-let logementsData = [];
-
 <script>
-    
- async function verifierAdresse() {
+
+let logementsData = [];   // <-- maintenant au bon endroit
+
+async function verifierAdresse() {
     const adresse = document.getElementById("adresseInput").value;
     const resultat = document.getElementById("resultatAdresse");
 
@@ -83,7 +83,7 @@ let logementsData = [];
         resultat.textContent = "Erreur réseau.";
         resultat.style.color = "red";
     }
-} 
+}
 
 async function chargerLogements() {
     const url = "https://registre-logements-demo.onrender.com/logements";
@@ -112,11 +112,10 @@ async function chargerLogements() {
         liste.appendChild(div);
     });
 }
-    
+
 function chercherLogementParAdresse(adresse) {
     const resultat = document.getElementById("resultatAdresse");
 
-    // Normalisation simple
     const adresseNorm = adresse.trim().toLowerCase();
 
     const logement = logementsData.find(log =>
@@ -134,8 +133,10 @@ function chercherLogementParAdresse(adresse) {
         resultat.style.color = "orange";
     }
 }
-</script>
 
+chargerLogements();
+
+</script>
 
 <script>
   if ("serviceWorker" in navigator) {
@@ -144,13 +145,4 @@ function chercherLogementParAdresse(adresse) {
 </script>
 
 </body>
-
 </html>
-
-
-
-
-
-
-
-
