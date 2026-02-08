@@ -45,7 +45,7 @@
 
 <div style="margin-bottom: 20px;">
     <h2>Vérifier une adresse</h2>
-    <input id="adresseInput" type="text" placeholder="Ex: 123 Rue Principale, Saguenay" style="width: 80%; padding: 8px;">
+    <input id="adresseInput" type="text" placeholder="Ex: 725 Jolliet Saguenay" style="width: 80%; padding: 8px;">
     <button onclick="verifierAdresse()" style="padding: 8px;">Vérifier</button>
     <p id="resultatAdresse"></p>
 
@@ -109,27 +109,30 @@ async function chargerLogements() {
 }
 
 /* ------------------------------
-   3. Recherche intelligente
+   3. Recherche intelligente FLEXIBLE
 ------------------------------ */
 function chercherLogementParAdresse(adresse) {
     const resultat = document.getElementById("resultatAdresse");
 
     const adresseNorm = normaliserAdresse(adresse);
+    const motsRecherche = adresseNorm.split(" ").filter(m => m.length > 2);
 
     const logement = logementsData.find(log => {
         const adresseFichier = normaliserAdresse(log.adresse_complete);
 
-        const typeVoie = extraireTypeVoie(log.adresse_complete);
-        if (typeVoie) {
-            const a = adresse.toLowerCase();
-            const t = typeVoie.toLowerCase();
-            // souple : accepte le type complet OU sa première lettre
-            if (!a.includes(t) && !a.includes(t[0])) {
-                return false;
-            }
+        // Tous les mots significatifs doivent être présents
+        const okMots = motsRecherche.every(m => adresseFichier.includes(m));
+        if (!okMots) return false;
+
+        // Si l'utilisateur écrit un type de voie, il doit être cohérent
+        const typeFichier = extraireTypeVoie(log.adresse_complete);
+        const typeSaisi = extraireTypeVoie(adresse);
+
+        if (typeSaisi && typeFichier && typeSaisi !== typeFichier) {
+            return false;
         }
 
-        return adresseFichier.includes(adresseNorm);
+        return true;
     });
 
     if (logement) {
