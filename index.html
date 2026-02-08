@@ -177,25 +177,24 @@ function extraireTypeVoie(adresse) {
 /* ------------------------------
    6. Afficher la carte (ESRI)
 ------------------------------ */
+let batimentsLayer = L.layerGroup();
+let overpassTimeout = null;
+
 function afficherCarte(lat, lon) {
     const mapDiv = document.getElementById("map");
     mapDiv.style.display = "block";
 
     setTimeout(() => {
+
         if (!map) {
             map = L.map('map').setView([lat, lon], 18);
 
-            // Fond ESRI avec bâtiments visibles partout
-            L.tileLayer(
-                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                { maxZoom: 20 }
-            ).addTo(map);
+            // Fond OSM détaillé (bâtiments stylisés)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 20
+            }).addTo(map);
 
-            // Labels et limites
-            L.tileLayer(
-                'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-                { maxZoom: 20 }
-            ).addTo(map);
+            batimentsLayer.addTo(map);
 
         } else {
             map.setView([lat, lon], 18);
@@ -203,7 +202,55 @@ function afficherCarte(lat, lon) {
 
         map.invalidateSize();
 
+        // Effacer anciens bâtiments
+        batimentsLayer.clearLayers();
+
+        // Marqueur exact
         L.marker([lat, lon]).addTo(map);
+
+        // Rayon dynamique selon zoom
+        const rayon = 120;
+
+        // Requête Overpass
+        const query = `
+            [out:json][timeout:10];
+            (
+                way["building"](around:${rayon},${lat},${lon});
+            );
+            out geom;
+        `;
+
+        // Timeout de sécurité
+        if (overpassTimeout) clearTimeout(overpassTimeout);
+
+        overpassTimeout = setTimeout(() => {
+            console.warn("Overpass trop lent → on laisse la carte sans footprints.");
+        }, 3000);
+
+        fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            body: query
+        })
+        .then(r => r.json())
+        .then(data => {
+            clearTimeout(overpassTimeout);
+
+            if (!data.elements) return;
+
+            data.elements.forEach(b => {
+                if (b.geometry) {
+                    const coords = b.geometry.map(p => [p.lat, p.lon]);
+                    L.polygon(coords, {
+                        color: "#444",
+                        weight: 1,
+                        fillOpacity: 0.4
+                    }).addTo(batimentsLayer);
+                }
+            });
+        })
+        .catch(() => {
+            console.warn("Erreur Overpass → aucun footprint ajouté.");
+        });
 
     }, 50);
 }
@@ -236,5 +283,6 @@ chargerLogements();
 
 </body>
 </html>
+
 
 
