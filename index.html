@@ -94,10 +94,10 @@ async function chargerLogements() {
 function chercherLogementParAdresse(adresse) {
     const resultat = document.getElementById("resultatAdresse");
 
-    const adresseNorm = adresse.trim().toLowerCase();
+    const adresseNorm = normaliserAdresse(adresse);
 
     const logement = logementsData.find(log =>
-        log.adresse_complete.toLowerCase() === adresseNorm
+        normaliserAdresse(log.adresse_complete) === adresseNorm
     );
 
     if (logement) {
@@ -112,6 +112,15 @@ function chercherLogementParAdresse(adresse) {
     }
 }
 
+function normaliserAdresse(texte) {
+    return texte
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlever accents
+        .replace(/,/g, "") // enlever virgules
+        .replace(/\s+/g, " ") // espaces multiples → un espace
+        .trim();
+}
+
 chargerLogements();
 
 </script>
@@ -124,4 +133,5 @@ chargerLogements();
 
 </body>
 </html>
+
 
