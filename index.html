@@ -6,6 +6,8 @@
     <title>Registre des logements</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a237e">
+    
+    <script src="https://cdn.osmbuildings.org/OSMBuildings-Leaflet.js"></script>
 
     <!-- Leaflet -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -182,17 +184,15 @@ function afficherCarte(lat, lon) {
     setTimeout(() => {
         if (!map) {
             map = L.map('map').setView([lat, lon], 18);
-
-            // Fond ESRI avec bâtiments partout
-            L.tileLayer(
-                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-                { maxZoom: 19 }
-            ).addTo(map);
-
+        
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 20
+            }).addTo(map);
+        
+            osmb = new OSMBuildings(map).load();
         } else {
             map.setView([lat, lon], 18);
         }
-
         map.invalidateSize();
 
         L.marker([lat, lon]).addTo(map);
@@ -228,3 +228,4 @@ chargerLogements();
 
 </body>
 </html>
+
