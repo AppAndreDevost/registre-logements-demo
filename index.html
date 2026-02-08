@@ -45,8 +45,11 @@
 
 <script>
 
-let logementsData = [];   <!-- ICI, dans le script -->
+let logementsData = [];
 
+/* ------------------------------
+   1. Vérifier l'adresse entrée
+------------------------------ */
 function verifierAdresse() {
     const adresse = document.getElementById("adresseInput").value;
     const resultat = document.getElementById("resultatAdresse");
@@ -63,6 +66,9 @@ function verifierAdresse() {
     chercherLogementParAdresse(adresse);
 }
 
+/* ------------------------------
+   2. Charger les logements
+------------------------------ */
 async function chargerLogements() {
     const url = "https://registre-logements-demo.onrender.com/logements";
     const response = await fetch(url);
@@ -91,6 +97,9 @@ async function chargerLogements() {
     });
 }
 
+/* ------------------------------
+   3. Recherche intelligente
+------------------------------ */
 function chercherLogementParAdresse(adresse) {
     const resultat = document.getElementById("resultatAdresse");
 
@@ -101,24 +110,43 @@ function chercherLogementParAdresse(adresse) {
     );
 
     if (logement) {
-        resultat.innerHTML += `<br><br><strong>Loyer disponible :</strong><br>
+        resultat.innerHTML = `<strong>Loyer disponible :</strong><br>
         Type : ${logement.type_logement}<br>
         Chambres : ${logement.nombre_chambres}<br>
         Coût 2026 : ${logement.cout_historique.split(";")[0].split(":")[1]} $`;
         resultat.style.color = "green";
     } else {
-        resultat.innerHTML += `<br><br>Aucun loyer disponible à cette adresse.`;
+        resultat.innerHTML = `Aucun loyer disponible à cette adresse.`;
         resultat.style.color = "orange";
     }
 }
 
+/* ------------------------------
+   4. Normalisation avancée
+------------------------------ */
+const typesVoies = [
+    "rue", "boulevard", "boul", "rang", "avenue", "ave", "chemin", "ch",
+    "route", "rt", "impasse", "allee", "place", "pl", "cote", "côte"
+];
+
+function enleverTypesVoies(texte) {
+    let t = texte;
+    typesVoies.forEach(type => {
+        const regex = new RegExp("\\b" + type + "\\b", "gi");
+        t = t.replace(regex, "");
+    });
+    return t.replace(/\s+/g, " ").trim();
+}
+
 function normaliserAdresse(texte) {
-    return texte
-        .toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlever accents
-        .replace(/,/g, "") // enlever virgules
-        .replace(/\s+/g, " ") // espaces multiples → un espace
-        .trim();
+    return enleverTypesVoies(
+        texte
+            .toLowerCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+            .replace(/,/g, "")
+            .replace(/\s+/g, " ")
+            .trim()
+    );
 }
 
 chargerLogements();
@@ -133,7 +161,3 @@ chargerLogements();
 
 </body>
 </html>
-
-
-
-
