@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,11 +16,52 @@
             height: 100vh;
             width: 100vw;
         }
+
+        /* --- Panneau latéral --- */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            right: -350px; /* caché par défaut */
+            width: 350px;
+            height: 100%;
+            background: #ffffff;
+            box-shadow: -4px 0 10px rgba(0,0,0,0.2);
+            padding: 20px;
+            transition: right 0.3s ease;
+            font-family: Arial, sans-serif;
+            overflow-y: auto;
+        }
+
+        #sidebar.open {
+            right: 0;
+        }
+
+        #sidebar h2 {
+            margin-top: 0;
+        }
+
+        #closeSidebar {
+            cursor: pointer;
+            color: #444;
+            font-size: 18px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
 
 <div id="map"></div>
+
+<!-- Panneau latéral -->
+<div id="sidebar">
+    <span id="closeSidebar">✖ Fermer</span>
+    <h2>725 Rue Jolliet</h2>
+    <p><strong>Ville :</strong> Saguenay (Chicoutimi)</p>
+    <p><strong>Code postal :</strong> G7J 2P7</p>
+    <p><strong>Type :</strong> Immeuble résidentiel</p>
+    <p><strong>Statut :</strong> Occupé / Disponible (à adapter)</p>
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
@@ -36,7 +76,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 
 // -------------------------
-// Polygone manuel du bâtiment du 725 Rue Jolliet
+// Polygone manuel du bâtiment
 // -------------------------
 const batiment = L.polygon([
     [48.418792949893316, -71.06901705265047],  // Coin A
@@ -49,15 +89,34 @@ const batiment = L.polygon([
     fillOpacity: 0.3
 }).addTo(map);
 
-// Centrer automatiquement sur le bâtiment
 map.fitBounds(batiment.getBounds());
 
 // -------------------------
-// Afficher les coordonnées au clic
+// Panneau latéral
+// -------------------------
+const sidebar = document.getElementById("sidebar");
+const closeBtn = document.getElementById("closeSidebar");
+
+// Ouvrir le panneau quand on clique sur le bâtiment
+batiment.on("click", () => {
+    sidebar.classList.add("open");
+});
+
+// Fermer le panneau
+closeBtn.onclick = () => {
+    sidebar.classList.remove("open");
+};
+
+// Fermer le panneau si on clique ailleurs sur la carte
+map.on("click", () => {
+    sidebar.classList.remove("open");
+});
+
+// -------------------------
+// Afficher les coordonnées au clic (utile pour d'autres bâtiments)
 // -------------------------
 map.on("click", function(e) {
     console.log("Coordonnées cliquées :", e.latlng);
-    alert("Coordonnées : " + e.latlng.lat + ", " + e.latlng.lng);
 });
 </script>
 
