@@ -62,8 +62,35 @@
             liste.appendChild(div);
         });
     }
+    async function verifierAdresse(adresse) {
+    const url = `https://geocode.xyz/${encodeURIComponent(adresse)}?json=1`;
+
+    try {
+            const response = await fetch(url);
+            const data = await response.json();
+    
+            if (data.error) {
+                return { valide: false, message: "Adresse introuvable" };
+            }
+    
+            if (data.confidence && data.confidence < 0.5) {
+                return { valide: false, message: "Adresse douteuse" };
+            }
+    
+            return {
+                valide: true,
+                latitude: data.latt,
+                longitude: data.longt,
+                normalisee: data.standard
+            };
+    
+        } catch (e) {
+            return { valide: false, message: "Erreur réseau" };
+        }
+    }
 
 chargerLogements();
+verifierAdresse("123 Rue Principale, Saguenay, QC").then(console.log);
 </script>
 
 
@@ -76,3 +103,4 @@ chargerLogements();
 </body>
 
 </html>
+
