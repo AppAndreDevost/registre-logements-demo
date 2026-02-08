@@ -1,331 +1,48 @@
 <!DOCTYPE html>
-<html lang="fr">
-
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Registre des logements</title>
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1a237e">
-    
-    <script src="https://cdn.osmbuildings.org/OSMBuildings-Leaflet.js"></script>
-
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
+    <meta charset="utf-8">
+    <title>Test Carte</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        .logement {
-            background: white;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .adresse {
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-        .details {
-            margin-top: 5px;
-            color: #444;
-        }
+        #map { height: 100vh; }
     </style>
 </head>
-
 <body>
 
-<h1>Registre des logements</h1>
-<div id="liste"></div>
+<div id="map"></div>
 
-<div style="margin-bottom: 20px;">
-    <h2>Vérifier une adresse</h2>
-    <input id="adresseInput" type="text" placeholder="Ex: 725 Jolliet Saguenay" style="width: 80%; padding: 8px;">
-    <button onclick="verifierAdresse()" style="padding: 8px;">Vérifier</button>
-    <p id="resultatAdresse"></p>
-
-    <div id="map" style="height: 300px; margin-top: 20px; display: none;"></div>
-</div>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+let map = L.map('map').setView([48.43, -71.06], 12);
+let logementsCharges = false;
 
-let logementsData = [];
-let map = null;
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 20
+}).addTo(map);
 
-/* ------------------------------
-   1. Vérifier l'adresse entrée
------------------------------- */
-function verifierAdresse() {
-    const adresse = document.getElementById("adresseInput").value;
-    const resultat = document.getElementById("resultatAdresse");
-
-    if (!adresse.trim()) {
-        resultat.textContent = "Veuillez entrer une adresse.";
-        resultat.style.color = "red";
-        return;
+map.on("zoomend", () => {
+    if (map.getZoom() >= 15 && !logementsCharges) {
+        logementsCharges = true;
+        chargerLogements();
     }
+});
 
-    resultat.textContent = "Recherche en cours...";
-    resultat.style.color = "black";
-
-    chercherLogementParAdresse(adresse);
-}
-
-/* ------------------------------
-   2. Charger les logements
------------------------------- */
-async function chargerLogements() {
-    const url = "https://registre-logements-demo.onrender.com/logements";
-    const response = await fetch(url);
-    const data = await response.json();
-
-    logementsData = data.logements;
-
-    const liste = document.getElementById("liste");
-    liste.innerHTML = "";
-
-    logementsData.forEach(log => {
-        const div = document.createElement("div");
-        div.className = "logement";
-
-        div.innerHTML = `
-            <div class="adresse">${log.adresse_complete}</div>
-            <div class="details">
-                <strong>Ville :</strong> ${log.ville}<br>
-                <strong>Type :</strong> ${log.type_logement}<br>
-                <strong>Chambres :</strong> ${log.nombre_chambres}<br>
-                <strong>Coût (2026) :</strong> ${log.cout_historique.split(";")[0].split(":")[1]} $<br>
-            </div>
-        `;
-
-        liste.appendChild(div);
-    });
-}
-
-/* ------------------------------
-   3. Recherche intelligente FLEXIBLE
------------------------------- */
-function chercherLogementParAdresse(adresse) {
-    const resultat = document.getElementById("resultatAdresse");
-
-    const adresseNorm = normaliserAdresse(adresse);
-    const motsRecherche = adresseNorm.split(" ").filter(m => m.length > 2);
-
-    const logement = logementsData.find(log => {
-        const adresseCompleteFichier = normaliserAdresse(
-            `${log.adresse_complete} ${log.ville}`
-        );
-
-        const okMots = motsRecherche.every(m => adresseCompleteFichier.includes(m));
-        if (!okMots) return false;
-
-        const typeFichier = extraireTypeVoie(log.adresse_complete);
-        const typeSaisi = extraireTypeVoie(adresse);
-
-        if (typeSaisi && typeFichier && typeSaisi !== typeFichier) {
-            return false;
-        }
-
-        return true;
-    });
-
-    if (logement) {
-        resultat.innerHTML = `<strong>Loyer disponible :</strong><br>
-        Type : ${logement.type_logement}<br>
-        Chambres : ${logement.nombre_chambres}<br>
-        Coût 2026 : ${logement.cout_historique.split(";")[0].split(":")[1]} $`;
-
-        resultat.style.color = "green";
-
-        geocoderAdresseComplete(logement.adresse_complete + ", " + logement.ville);
-
-    } else {
-        resultat.innerHTML = `Aucun loyer disponible à cette adresse.`;
-        resultat.style.color = "orange";
-        document.getElementById("map").style.display = "none";
-    }
-}
-
-/* ------------------------------
-   4. Normalisation
------------------------------- */
-function normaliserAdresse(texte) {
-    return texte
-        .toLowerCase()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-        .replace(/,/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-}
-
-/* ------------------------------
-   5. Extraire le type de voie
------------------------------- */
-function extraireTypeVoie(adresse) {
-    const mots = adresse.toLowerCase().split(" ");
-    const types = ["rue", "boulevard", "boul", "rang", "avenue", "ave", "chemin", "ch", "route", "rt"];
-    return mots.find(m => types.includes(m));
-}
-
-/* ------------------------------
-   6. Afficher la carte (ESRI)
------------------------------- */
-let batimentsLayer = L.layerGroup();
-let selectionLayer = L.layerGroup();
-
-function centroid(coords) {
-    let lat = 0, lon = 0;
-    coords.forEach(p => {
-        lat += p.lat;
-        lon += p.lon;
-    });
-    return { lat: lat / coords.length, lon: lon / coords.length };
-}
-
-function distance(a, b) {
-    const R = 6371000;
-    const dLat = (b.lat - a.lat) * Math.PI / 180;
-    const dLon = (b.lon - a.lon) * Math.PI / 180;
-    const lat1 = a.lat * Math.PI / 180;
-    const lat2 = b.lat * Math.PI / 180;
-
-    const x = dLon * Math.cos((lat1 + lat2) / 2);
-    const y = dLat;
-    return Math.sqrt(x * x + y * y) * R;
-}
-
-function afficherCarte(lat, lon) {
-    const mapDiv = document.getElementById("map");
-    mapDiv.style.display = "block";
-
-    setTimeout(() => {
-
-        if (!map) {
-            map = L.map('map').setView([lat, lon], 18);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 20
-            }).addTo(map);
-
-            batimentsLayer.addTo(map);
-            selectionLayer.addTo(map);
-
-        } else {
-            map.setView([lat, lon], 18);
-        }
-
-        map.invalidateSize();
-
-        batimentsLayer.clearLayers();
-        selectionLayer.clearLayers();
-
-        // Point approximatif de Nominatim
-        const pointApprox = { lat, lon };
-
-        // Rayon pour récupérer les bâtiments
-        const rayon = 120;
-
-        const query = `
-            [out:json][timeout:10];
-            (
-                way["building"](around:${rayon},${lat},${lon});
-            );
-            out geom;
-        `;
-
-        fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: query
-        })
+function chargerLogements() {
+    fetch("https://registre-logements-demo.onrender.com/logements")
         .then(r => r.json())
         .then(data => {
-            if (!data.elements || data.elements.length === 0) {
-                // Aucun bâtiment → on place juste le marqueur approximatif
-                L.marker([lat, lon]).addTo(selectionLayer);
-                return;
-            }
-
-            let meilleurBatiment = null;
-            let meilleureDistance = Infinity;
-
-            data.elements.forEach(b => {
-                if (!b.geometry) return;
-
-                const coords = b.geometry.map(p => ({ lat: p.lat, lon: p.lon }));
-                const c = centroid(coords);
-                const d = distance(pointApprox, c);
-
-                // On garde le bâtiment le plus proche
-                if (d < meilleureDistance) {
-                    meilleureDistance = d;
-                    meilleurBatiment = { coords, centroid: c };
+            data.forEach(log => {
+                if (log.lat && log.lon) {
+                    L.marker([log.lat, log.lon])
+                        .addTo(map)
+                        .bindPopup(`<strong>${log.adresse_complete}</strong><br>${log.ville}`);
                 }
-
-                // On affiche tous les bâtiments en gris
-                L.polygon(coords.map(p => [p.lat, p.lon]), {
-                    color: "#666",
-                    weight: 1,
-                    fillOpacity: 0.2
-                }).addTo(batimentsLayer);
             });
-
-            if (meilleurBatiment) {
-                // On met en évidence le bon bâtiment
-                L.polygon(meilleurBatiment.coords.map(p => [p.lat, p.lon]), {
-                    color: "red",
-                    weight: 2,
-                    fillOpacity: 0.3
-                }).addTo(selectionLayer);
-
-                // On place le pointeur EXACT sur le bâtiment sélectionné
-                L.marker([meilleurBatiment.centroid.lat, meilleurBatiment.centroid.lon]).addTo(selectionLayer);
-            }
-
-        })
-        .catch(() => {
-            // En cas d'erreur Overpass → fallback
-            L.marker([lat, lon]).addTo(selectionLayer);
         });
-
-    }, 50);
 }
-
-/* ------------------------------
-   7. Géocoder l'adresse complète
------------------------------- */
-async function geocoderAdresseComplete(adresse) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adresse)}`;
-
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        afficherCarte(lat, lon);
-    }
-}
-
-chargerLogements();
-
-</script>
-
-<script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js");
-  }
 </script>
 
 </body>
 </html>
-
-
-
-
