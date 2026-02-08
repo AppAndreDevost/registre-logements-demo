@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
+    
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
 <head>
     <meta charset="UTF-8">
     <title>Registre des logements</title>
@@ -41,6 +45,8 @@
     <input id="adresseInput" type="text" placeholder="Ex: 123 Rue Principale, Saguenay" style="width: 80%; padding: 8px;">
     <button onclick="verifierAdresse()" style="padding: 8px;">Vérifier</button>
     <p id="resultatAdresse"></p>
+
+    <div id="map" style="height: 300px; margin-top: 20px; display: none;"></div>
 </div>
 
 <script>
@@ -122,10 +128,16 @@ function chercherLogementParAdresse(adresse) {
         Type : ${logement.type_logement}<br>
         Chambres : ${logement.nombre_chambres}<br>
         Coût 2026 : ${logement.cout_historique.split(";")[0].split(":")[1]} $`;
+    
         resultat.style.color = "green";
+    
+        // Géolocalisation simple basée sur la ville
+        geocoderVille(logement.ville);
+    
     } else {
         resultat.innerHTML = `Aucun loyer disponible à cette adresse.`;
         resultat.style.color = "orange";
+        document.getElementById("map").style.display = "none";
     }
 }
 
@@ -150,6 +162,37 @@ function extraireTypeVoie(adresse) {
     return mots.find(m => types.includes(m));
 }
 
+    let map = null;
+
+function afficherCarte(lat, lon) {
+    const mapDiv = document.getElementById("map");
+    mapDiv.style.display = "block";
+
+    if (!map) {
+        map = L.map('map').setView([lat, lon], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+    } else {
+        map.setView([lat, lon], 14);
+    }
+
+    L.marker([lat, lon]).addTo(map);
+}
+
+async function geocoderVille(ville) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ville + ", Québec")}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.length > 0) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        afficherCarte(lat, lon);
+    }
+}
+
 chargerLogements();
 
 </script>
@@ -162,3 +205,4 @@ chargerLogements();
 
 </body>
 </html>
+
