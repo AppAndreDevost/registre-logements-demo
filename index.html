@@ -184,15 +184,23 @@ function afficherCarte(lat, lon) {
     setTimeout(() => {
         if (!map) {
             map = L.map('map').setView([lat, lon], 18);
-        
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 20
-            }).addTo(map);
-        
-            osmb = new OSMBuildings(map).load();
+
+            // Fond ESRI avec bâtiments visibles partout
+            L.tileLayer(
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                { maxZoom: 20 }
+            ).addTo(map);
+
+            // Labels et limites
+            L.tileLayer(
+                'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+                { maxZoom: 20 }
+            ).addTo(map);
+
         } else {
             map.setView([lat, lon], 18);
         }
+
         map.invalidateSize();
 
         L.marker([lat, lon]).addTo(map);
@@ -228,4 +236,5 @@ chargerLogements();
 
 </body>
 </html>
+
 
