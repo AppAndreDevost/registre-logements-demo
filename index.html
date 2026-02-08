@@ -185,8 +185,8 @@ function afficherCarte(lat, lon) {
     }, 50);
 }
 
-async function geocoderVille(ville) {
-    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(ville + ", Québec")}`;
+async function geocoderAdresseComplete(adresse) {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(adresse + ", Québec")}`;
 
     const response = await fetch(url);
     const data = await response.json();
@@ -210,6 +210,7 @@ chargerLogements();
 
 </body>
 </html>
+
 
 
 
